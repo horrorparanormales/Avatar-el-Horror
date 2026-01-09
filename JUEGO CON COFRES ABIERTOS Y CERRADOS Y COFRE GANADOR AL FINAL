@@ -1,0 +1,307 @@
+juego bien murciélagos bien , cofres bien , cofre ganador bien , pero los cofres se quedan abiertos y ya esta el cofre final se queda buen rato
+
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>Juego Horror Paranormales</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Creepster&display=swap" rel="stylesheet">
+
+<style>
+body{
+  margin:0;
+  min-height:100vh;
+  background:url('https://backiee.com/static/wallpapers/1000x563/375968.jpg') center/cover;
+  font-family:Arial;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  overflow:hidden;
+}
+
+/* AVATAR */
+.avatar{
+  width:280px;
+  margin:20px;
+  animation:breathe 5s infinite;
+  z-index:20;
+  position:relative;
+}
+.avatar img{width:100%}
+@keyframes breathe{50%{transform:translateY(-6px)}}
+
+.blink{
+  position:absolute;
+  left:50%;top:34%;
+  width:155px;height:52px;
+  background:#111;
+  border-radius:30px;
+  transform:translateX(-50%) scaleY(0);
+  animation:blink 7s infinite;
+}
+@keyframes blink{
+  0%,90%,100%{opacity:0}
+  91%{opacity:1;transform:translateX(-50%) scaleY(1)}
+}
+
+/* UI */
+.container{
+  background:rgba(0,0,0,.6);
+  padding:30px;
+  border-radius:10px;
+  text-align:center;
+  z-index:20;
+}
+.container h1{
+  font-family:'Creepster';
+  color:#fff;
+}
+button{
+  padding:15px 30px;
+  font-family:'Creepster';
+  font-size:20px;
+  background:darkred;
+  color:white;
+  border:none;
+  cursor:pointer;
+}
+#reiniciarBtn{
+  position:fixed;
+  top:20px;left:20px;
+  z-index:30;
+}
+
+/* COFRES */
+#cuadros-container{
+  width:90%;
+  max-width:1000px;
+  display:grid;
+  grid-template-columns:repeat(auto-fill,80px);
+  gap:20px;
+  justify-content:center;
+  z-index:15;
+}
+.cuadro{
+  width:80px;height:80px;
+  background:url("https://raw.githubusercontent.com/horrorparanormales/Avatar-el-Horror/main/cofre.png") center/cover;
+  border-radius:8px;
+  cursor:pointer;
+  animation:fadeIn .5s forwards, sway 4s infinite;
+}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes sway{50%{transform:translateX(4px)}}
+.cuadro:hover{
+  border:3px solid #00ff00;
+  box-shadow:0 0 15px #00ff00,inset 0 0 15px #00ff00;
+}
+.premio{
+  border:3px dashed yellow;
+  box-shadow:0 0 30px yellow inset;
+}
+
+/* ✨ COFRE GANADOR ESPECIAL */
+.zoom-ganador{
+  position:fixed;
+  inset:0;
+  margin:auto;
+  width:200px;
+  height:200px;
+  z-index:999;
+  animation:
+    zoomWin 2.5s ease forwards,
+    floatWin 6s ease-in-out infinite;
+}
+
+/* Resplandor detrás */
+.zoom-ganador::before{
+  content:"";
+  position:absolute;
+  inset:-40px;
+  background:radial-gradient(circle,
+    rgba(255,215,0,.9),
+    rgba(255,140,0,.4),
+    transparent 70%);
+  filter:blur(25px);
+  z-index:-1;
+  animation:glowPulse 4s ease-in-out infinite;
+}
+
+@keyframes zoomWin{
+  0%{transform:scale(.2);opacity:0}
+  40%{opacity:1}
+  100%{transform:scale(1.4);opacity:1}
+}
+
+@keyframes floatWin{
+  0%,100%{transform:translateY(0) scale(1.4)}
+  50%{transform:translateY(-12px) scale(1.4)}
+}
+
+@keyframes glowPulse{
+  0%,100%{opacity:.6}
+  50%{opacity:1}
+}
+
+.caer{
+  animation:caer 1.5s forwards;
+}
+@keyframes caer{
+  to{transform:translateY(120vh) rotate(20deg);opacity:0}
+}
+
+/* ERROR */
+.error-overlay{
+  position:fixed;
+  inset:0;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:999;
+}
+.x-mark{
+  font-size:120px;
+  color:darkred;
+  text-shadow:0 0 20px red;
+}
+.error-text{
+  font-family:'Creepster';
+  font-size:48px;
+  color:crimson;
+}
+
+/* 🦇 MURCIÉLAGOS */
+.bats-layer{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:25;
+}
+.bat{position:fixed}
+.bat img{
+  width:100%;
+  animation:flap .5s infinite;
+}
+@keyframes flap{50%{transform:scaleY(.85)}}
+.fly-right{left:-150px;animation:flyRight linear forwards}
+.fly-left{right:-150px;animation:flyLeft linear forwards}
+.fly-left img{transform:scaleX(-1)}
+@keyframes flyRight{to{transform:translateX(140vw)}}
+@keyframes flyLeft{to{transform:translateX(-140vw)}}
+
+/* 👻 FANTASMAS */
+.ghost-layer{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:18;
+}
+.ghost{
+  position:fixed;
+  opacity:0;
+  transition:opacity 1s;
+}
+.ghost img{width:140px}
+.ghost.show{opacity:1}
+</style>
+</head>
+
+<body>
+
+<div class="bats-layer" id="batsLayer"></div>
+<div class="ghost-layer" id="ghostLayer"></div>
+
+<div class="avatar">
+  <img id="avatarImg" src="https://raw.githubusercontent.com/horrorparanormales/Avatar-el-Horror/main/EL_horror-sin%20fondo.png">
+  <div class="blink"></div>
+</div>
+
+<button id="reiniciarBtn" onclick="location.reload()">Reiniciar</button>
+
+<div class="container" id="start-container">
+  <h1>Juego Horror Paranormales</h1>
+  <button onclick="startGame()">INICIAR JUEGO</button>
+</div>
+
+<div id="cuadros-container"></div>
+
+<div class="error-overlay" id="errorOverlay">
+  <div class="error-box">
+    <div class="x-mark">✖</div>
+    <div class="error-text">EQUIVOCADO</div>
+  </div>
+</div>
+
+<script>
+const avatarNormal="https://raw.githubusercontent.com/horrorparanormales/Avatar-el-Horror/main/EL_horror-sin%20fondo.png";
+const avatarConf="https://raw.githubusercontent.com/horrorparanormales/Avatar-el-Horror/main/confundido%20sin%20background.png";
+const avatarWin="https://raw.githubusercontent.com/horrorparanormales/Avatar-el-Horror/main/ganaste%20background%20limpio.png";
+const cofreAbierto="https://raw.githubusercontent.com/horrorparanormales/Avatar-el-Horror/main/cofre%20abierto.png";
+const cofreGanador="https://raw.githubusercontent.com/horrorparanormales/Avatar-el-Horror/main/cofre%20ganador.png";
+
+let premioIndex=-1, terminado=false;
+
+function startGame(){
+  terminado=false;
+  document.getElementById("start-container").style.display="none";
+  const cont=document.getElementById("cuadros-container");
+  cont.innerHTML="";
+  premioIndex=Math.floor(Math.random()*40);
+
+  for(let i=0;i<40;i++){
+    const c=document.createElement("div");
+    c.className="cuadro";
+    c.onclick=()=>!terminado&&(i===premioIndex?ganar(c):error(c));
+    cont.appendChild(c);
+  }
+}
+
+function ganar(c){
+  terminado=true;
+  document.getElementById("avatarImg").src=avatarWin;
+
+  const zoom=c.cloneNode(true);
+  zoom.classList.add("zoom-ganador");
+  zoom.style.backgroundImage=`url(${cofreGanador})`;
+  document.body.appendChild(zoom);
+
+  document.querySelectorAll(".cuadro")
+    .forEach((x,i)=>setTimeout(()=>x.classList.add("caer"),i*40));
+
+  /* ⏱️ quitar cofre ganador tras 15 segundos */
+  setTimeout(()=>zoom.remove(),15000);
+}
+
+function error(c){
+  const ov=document.getElementById("errorOverlay");
+  document.getElementById("avatarImg").src=avatarConf;
+  c.style.backgroundImage=`url(${cofreAbierto})`;
+  ov.style.display="flex";
+  setTimeout(()=>{
+    ov.style.display="none";
+    document.getElementById("avatarImg").src=avatarNormal;
+  },1800);
+}
+
+/* 🦇 Murciélagos */
+const bats=document.getElementById("batsLayer");
+function lanzarMurcielagos(){
+  for(let i=0;i<3;i++){
+    const b=document.createElement("div");
+    b.className="bat "+(Math.random()>.5?"fly-right":"fly-left");
+    b.style.top=Math.random()*70+"%";
+    b.style.width=Math.random()*40+60+"px";
+    b.style.animationDuration=Math.random()*3+4+"s";
+    const img=document.createElement("img");
+    img.src="https://raw.githubusercontent.com/horrorparanormales/Avatar-el-Horror/main/murcielago%20limpio.png";
+    b.appendChild(img);
+    bats.appendChild(b);
+    setTimeout(()=>b.remove(),8000);
+  }
+}
+setInterval(lanzarMurcielagos,5000);
+</script>
+
+</body>
+</html>
