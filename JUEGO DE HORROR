@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>Juego Horror Paranormales</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Creepster&display=swap" rel="stylesheet">
+
+<style>
+/* =======================
+   GENERAL
+======================= */
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-image: url('https://backiee.com/static/wallpapers/1000x563/375968.jpg');
+  background-size: cover;
+  background-position: center;
+  font-family: Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+}
+
+/* =======================
+   AVATAR
+======================= */
+.avatar {
+  position: relative;
+  width: 280px;
+  margin: 20px 0;
+  animation: breathe 5s ease-in-out infinite;
+  z-index: 10;
+}
+
+.avatar img { width: 100%; }
+
+@keyframes breathe {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.blink {
+  position: absolute;
+  left: 50%;
+  top: 34%;
+  width: 155px;
+  height: 52px;
+  background: #1c1c1c;
+  border-radius: 30px;
+  transform: translateX(-50%) scaleY(0);
+  animation: blink 7.5s infinite;
+}
+
+@keyframes blink {
+  0%,90%,100% { opacity:0; transform:translateX(-50%) scaleY(0); }
+  91% { opacity:1; transform:translateX(-50%) scaleY(1); }
+  92% { opacity:0; }
+}
+
+/* =======================
+   INICIO
+======================= */
+.container {
+  background: rgba(0,0,0,0.6);
+  padding: 30px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.container h1 {
+  font-family: 'Creepster', cursive;
+  color: white;
+}
+
+button {
+  padding: 15px 30px;
+  font-size: 20px;
+  font-family: 'Creepster', cursive;
+  background: darkred;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#reiniciarBtn {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 20;
+}
+
+/* =======================
+   CUADROS
+======================= */
+#cuadros-container {
+  width: 90%;
+  max-width: 1000px;
+  height: calc(100vh - 380px);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 80px);
+  gap: 20px;
+  justify-content: center;
+}
+
+.cuadro {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #000, #222);
+  border-radius: 8px;
+  opacity: 0;
+  cursor: pointer;
+  animation: fadeIn .5s forwards, sway 4s infinite;
+}
+
+@keyframes fadeIn { to { opacity:.7; } }
+@keyframes sway { 50% { transform: translateX(5px); } }
+
+.cuadro:hover {
+  border: 3px solid #00ff00;
+  box-shadow: 0 0 15px #00ff00, inset 0 0 15px #00ff00;
+}
+
+.premio {
+  border: 3px dashed yellow;
+  box-shadow: 0 0 20px yellow inset;
+}
+
+.cuadro.caer {
+  animation: caer 1.5s forwards;
+}
+
+@keyframes caer {
+  to {
+    transform: translateY(120vh) rotate(20deg);
+    opacity: 0;
+  }
+}
+
+/* =======================
+   ERROR
+======================= */
+.error-overlay {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.error-box {
+  text-align: center;
+  animation: appear .8s forwards;
+}
+
+.x-mark {
+  font-size: 120px;
+  color: darkred;
+  text-shadow: 0 0 15px red;
+}
+
+.error-text {
+  font-family: 'Creepster', cursive;
+  font-size: 48px;
+  color: crimson;
+}
+
+@keyframes appear {
+  from { transform: scale(.3); opacity:0; }
+  to { transform: scale(1); opacity:1; }
+}
+
+/* =======================
+   🦇 MURCIÉLAGOS
+======================= */
+.bats-layer, .ghost-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.bat {
+  position: absolute;
+}
+
+.bat img {
+  width: 100%;
+  animation: flap .6s infinite;
+}
+
+@keyframes flap {
+  50% { transform: scaleY(0.85); }
+}
+
+.fly-right { right: -150px; animation: flyRight linear forwards; }
+.fly-left { left: -150px; animation: flyLeft linear forwards; }
+.fly-left img { transform: scaleX(-1); }
+
+@keyframes flyRight { to { transform: translateX(-130vw); } }
+@keyframes flyLeft { to { transform: translateX(130vw); } }
+
+/* =======================
+   👻 FANTASMA
+======================= */
+.ghost {
+  position: fixed;
+  opacity: 0;
+  transition: opacity 1s;
+}
+
+.ghost img { width: 140px; }
+
+.ghost.show { opacity: 1; }
+.ghost.fly { animation: ghostFly 6s linear forwards; }
+
+@keyframes ghostFly {
+  from { transform: translateX(-150px); }
+  to { transform: translateX(120vw); }
+}
+</style>
+</head>
+
+<body>
+
+<div class="bats-layer" id="batsLayer"></div>
+<div class="ghost-layer" id="ghostLayer"></div>
+
+<div class="avatar">
+  <img id="avatarImg" src="https://raw.githubusercontent.com/horrorparanormales/Avatar-el-Horror/main/EL_horror-sin%20fondo.png">
+  <div class="blink"></div>
+</div>
+
+<button id="reiniciarBtn" onclick="reiniciarJuego()">Reiniciar</button>
+
+<div class="container" id="start-container">
+  <h1>Bienvenido al Juego Horror Paranormales</h1>
+  <button onclick="startGame()">INICIAR JUEGO</button>
+</div>
+
+<div id="cuadros-container"></div>
+
+<div class="error-overlay" id="errorOverlay">
+  <div class="error-box">
+    <div class="x-mark">✖</div>
+    <div class="error-text">EQUIVOCADO</div>
+  </div>
+</div>
+
+<script>
+/* =======================
+   JUEGO
+======================= */
+const avatarNormal = "https://raw.githubusercontent.com/horrorparanormales/Avatar-el-Horror/main/EL_horror-sin%20fondo.png";
+const avatarConfundido = "https://raw.githubusercontent.com/horrorparanormales/Avatar-el-Horror/main/confundido%20sin%20background.png";
+const avatarGanaste = "https://raw.githubusercontent.com/horrorparanormales/Avatar-el-Horror/main/ganaste%20background%20limpio.png";
+
+let premioIndex = -1;
+let juegoTerminado = false;
+
+function startGame() {
+  juegoTerminado = false;
+  document.getElementById("start-container").style.display = "none";
+  const container = document.getElementById("cuadros-container");
+  container.innerHTML = "";
+  premioIndex = Math.floor(Math.random() * 40);
+
+  for (let i = 0; i < 40; i++) {
+    const c = document.createElement("div");
+    c.className = "cuadro";
+    c.dataset.premio = i === premioIndex;
+    c.onclick = () => {
+      if (juegoTerminado) return;
+      c.dataset.premio === "true" ? ganarJuego(c) : mostrarError();
+    };
+    container.appendChild(c);
+  }
+}
+
+function ganarJuego(cuadro) {
+  juegoTerminado = true;
+  document.getElementById("avatarImg").src = avatarGanaste;
+  cuadro.classList.add("premio");
+  document.querySelectorAll(".cuadro").forEach((c,i)=>{
+    setTimeout(()=>c.classList.add("caer"), i*40);
+  });
+}
+
+function mostrarError() {
+  const overlay = document.getElementById("errorOverlay");
+  const avatar = document.getElementById("avatarImg");
+  overlay.style.display = "flex";
+  avatar.src = avatarConfundido;
+  setTimeout(()=>{
+    overlay.style.display = "none";
+    avatar.src = avatarNormal;
+  },2000);
+}
+
+function reiniciarJuego(){ location.reload(); }
+
+/* =======================
+   🦇 Murciélagos
+======================= */
+const batsLayer = document.getElementById("batsLayer");
+
+function lanzarMurcielagos() {
+  const cantidad = Math.floor(Math.random()*3)+2;
+  for(let i=0;i<cantidad;i++){
+    const bat=document.createElement("div");
+    bat.className="bat";
+    const img=document.createElement("img");
+    img.src="https://raw.githubusercontent.com/horrorparanormales/Avatar-el-Horror/main/murcielago%20limpio.png";
+    bat.appendChild(img);
+    bat.style.width=Math.random()*50+60+"px";
+    bat.style.top=Math.random()*70+"%";
+    bat.style.animationDuration=Math.random()*3+4+"s";
+    bat.classList.add(Math.random()>0.5?"fly-right":"fly-left");
+    batsLayer.appendChild(bat);
+    setTimeout(()=>bat.remove(),8000);
+  }
+}
+setInterval(lanzarMurcielagos,6000);
+
+/* =======================
+   👻 Fantasma
+======================= */
+const ghostLayer=document.getElementById("ghostLayer");
+const ghostImg="https://raw.githubusercontent.com/horrorparanormales/Avatar-el-Horror/main/fantasma%20claro.png";
+
+function aparecerFantasma(){
+  const g=document.createElement("div");
+  g.className="ghost";
+  const img=document.createElement("img");
+  img.src=ghostImg;
+  g.appendChild(img);
+  const esquinas=[
+    {top:"10px",left:"10px"},
+    {top:"10px",right:"10px"},
+    {bottom:"10px",left:"10px"},
+    {bottom:"10px",right:"10px"}
+  ];
+  Object.assign(g.style,esquinas[Math.floor(Math.random()*4)]);
+  ghostLayer.appendChild(g);
+  setTimeout(()=>g.classList.add("show"),100);
+  setTimeout(()=>g.remove(),3000);
+}
+
+function volarFantasma(){
+  const g=document.createElement("div");
+  g.className="ghost fly";
+  g.style.top=Math.random()*60+10+"%";
+  const img=document.createElement("img");
+  img.src=ghostImg;
+  g.appendChild(img);
+  ghostLayer.appendChild(g);
+  setTimeout(()=>g.remove(),7000);
+}
+
+setInterval(aparecerFantasma,12000);
+setInterval(volarFantasma,20000);
+</script>
+
+</body>
+</html>
